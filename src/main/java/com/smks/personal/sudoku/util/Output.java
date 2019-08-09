@@ -19,6 +19,7 @@ public class Output {
 				if(item % 3 == 0) System.out.print(" | ");
 			}
 			System.out.println("\n");
+
 		}
 	}
 	

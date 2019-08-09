@@ -22,7 +22,7 @@ public class SingleSetter {
 	}
 	
 	private Optional<Integer> getSingle(final Cell cell) {
-		System.out.println("Setting single: " + cell);
+		//System.out.println("Setting single: " + cell);
 		return cell.getPossibleValues().stream().findFirst();
 	}
 }

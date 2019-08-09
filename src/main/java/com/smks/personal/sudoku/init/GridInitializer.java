@@ -64,7 +64,6 @@ public class GridInitializer {
 		tupleList.entrySet().stream()
 			.forEach(entry -> entry.getKey().setParentUnits(entry.getValue()));
 		
-		System.out.println(cellList.get(0));
 		return new Grid(gridSize, cellList, blocks, columns, rows);
 	}
 }
