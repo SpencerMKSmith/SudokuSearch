@@ -6,13 +6,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import com.google.common.collect.Sets;
 import com.smks.personal.sudoku.data.Cell;
 import com.smks.personal.sudoku.data.CellUpdate;
 import com.smks.personal.sudoku.data.Grid;
 import com.smks.personal.sudoku.data.UpdatedGrid;
-
-import javafx.util.Pair;
 
 /*
  * The most commonly used elimination method where the value of each peer
@@ -29,17 +29,21 @@ public class DirectPeerEliminator implements Eliminator {
 				.stream()
 				.filter(cell -> cell.getValue().isEmpty())
 				.map(this::reducePossibilities)
+				.filter(Optional::isPresent)
+				.map(Optional::get)
 				.collect(Collectors.toList());
 		
 		return new UpdatedGrid(grid, cellUpdates);
 	}
 	
-	public CellUpdate reducePossibilities(final Cell cell) {
+	public Optional<CellUpdate> reducePossibilities(final Cell cell) {
 		final Set<Integer> eliminatedPossibilities = getEliminatedPossibilities(cell);
 		
 		cell.reducePossibilities(eliminatedPossibilities);
 		
-		return CellUpdate.of(cell, eliminatedPossibilities, this.getClass().getName());
+		return CollectionUtils.isEmpty(eliminatedPossibilities)
+				? Optional.empty()
+				: Optional.of(CellUpdate.of(cell, eliminatedPossibilities, this.getClass().getName()));
 	}
 	/*
 	 * Returns a set of integers which represents values no longer
@@ -49,9 +53,7 @@ public class DirectPeerEliminator implements Eliminator {
 		if(cell.getValue().isPresent()) {
 			return Collections.emptySet();
 		}
-		
-		final Set<Cell> peers = cell.getPeers();
-		
+				
 		final Set<Integer> valuesOfPeers = cell.getPeers().stream()
 				.map(Cell::getValue)
 				.filter(Optional::isPresent)
