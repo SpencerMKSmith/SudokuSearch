@@ -23,12 +23,12 @@ public class Solver {
 			newUpdates = eliminators.get(0).eliminatePossibleValues(grid).getCellUpdates();
 			allCellUpdates.addAll(newUpdates);
 			
-			//System.out.println("New updates: " + newUpdates);
+			System.out.println("New updates: " + newUpdates);
 			setter.solveSingles(grid);
 			
 		} while(isNotEmpty(newUpdates));
 		
-		Output.printCellList(grid.getCells());
+		Output.printGrid(grid);
 		return grid;
 	}
 }

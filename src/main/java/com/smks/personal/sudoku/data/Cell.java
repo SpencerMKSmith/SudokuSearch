@@ -1,33 +1,23 @@
 package com.smks.personal.sudoku.data;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.google.common.collect.Sets;
-
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
+import lombok.Value;
 
-@Data
-@RequiredArgsConstructor
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Value
+@RequiredArgsConstructor(staticName = "of")
+@Builder(toBuilder = true)
 public class Cell {
 	
 	Optional<Integer> value;
-	
-	@EqualsAndHashCode.Include
 	Position position;
-	
 	Set<Integer> possibleValues;
-
-	@ToString.Exclude
-	Set<Unit> parentUnits;
 
 	public Cell(final Position position, Optional<Integer> value, final Integer gridSize) {
 		this.position = position;
@@ -43,15 +33,15 @@ public class Cell {
 		}
 	}
 	
-	public Set<Cell> getPeers() {
-		return parentUnits.stream()
-				.map(Unit::getItemsInUnit)
-				.flatMap(List::stream)
-				.filter(cell -> !cell.equals(this))
-				.collect(Collectors.toSet());
-	}
-	
-	public void reducePossibilities(final Set<Integer> eliminatedPossibilities) {
-		possibleValues = Sets.difference(possibleValues, eliminatedPossibilities);
-	}
+//	public Set<Cell> getPeers() {
+//		return parentUnits.stream()
+//				.map(Unit::getItemsInUnit)
+//				.flatMap(List::stream)
+//				.filter(cell -> !cell.equals(this))
+//				.collect(Collectors.toSet());
+//	}
+//	
+//	public void reducePossibilities(final Set<Integer> eliminatedPossibilities) {
+//		possibleValues = Sets.difference(possibleValues, eliminatedPossibilities);
+//	}
 }

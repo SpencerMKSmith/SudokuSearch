@@ -1,6 +1,9 @@
 package com.smks.personal.sudoku.solver;
 
+import java.util.Collections;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.smks.personal.sudoku.data.Cell;
 import com.smks.personal.sudoku.data.Grid;
@@ -13,16 +16,22 @@ public class SingleSetter {
 
 	public Grid solveSingles(final Grid grid) {
 	
-		grid.getCells().stream()
+		final Set<Cell> loneSingles = grid.getPositionToCellMap()
+				.values()
+				.stream()
 				.filter(cell -> cell.getValue().isEmpty())
 				.filter(cell -> cell.getPossibleValues().size() == 1)
-				.forEach(cell -> cell.setValue(getSingle(cell)));
+				.map(this::getNewCellWithSetValue)
+				.collect(Collectors.toSet());
+
+		loneSingles.stream().forEach(loneSingle -> grid.putUpdatedCell(loneSingle));
 		
 		return grid;
 	}
-	
-	private Optional<Integer> getSingle(final Cell cell) {
+
+	private Cell getNewCellWithSetValue(final Cell cell) {
 		//System.out.println("Setting single: " + cell);
-		return cell.getPossibleValues().stream().findFirst();
+		final Optional<Integer> newValue = cell.getPossibleValues().stream().findFirst();
+		return Cell.of(newValue, cell.getPosition(), Collections.emptySet());
 	}
 }

@@ -1,10 +1,13 @@
 package com.smks.personal.sudoku.init.unit;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import com.smks.personal.sudoku.data.Cell;
+import com.smks.personal.sudoku.data.Position;
 import com.smks.personal.sudoku.data.Unit;
 import com.smks.personal.sudoku.data.UnitType;
 
@@ -15,28 +18,34 @@ import com.smks.personal.sudoku.data.UnitType;
  */
 public class UnitInitializer {
 
-	final static Map<UnitType, CellNumberFunction> CELL_NUMBER_FUNCTIONS = Map.of(
-			UnitType.BLOCK, new BlockCellNumberFunction(),
-			UnitType.COLUMN, new ColumnCellNumberFunction(),
-			UnitType.ROW, new RowCellNumberFunction());
+	final static Map<UnitType, CellPositionFunction> POSITION_FUNCTIONS = Map.of(
+			UnitType.BLOCK, new BlockCellPositionFunction(),
+			UnitType.COLUMN, new ColumnCellPositionFunction(),
+			UnitType.ROW, new RowCellPositionFunction());
 	
-	public static List<Unit> initializeUnit(final Integer gridSize, 
+	public static Set<Unit> initializeUnit(final Integer gridSize, 
 			final List<Cell> cells, 
+			final UnitType unitType) {		
+		
+		final Set<Unit> unitSet = IntStream.range(0, gridSize)
+				.mapToObj(unitIndex -> generateUnit(gridSize, unitIndex, unitType))
+				.collect(Collectors.toSet());
+
+		return unitSet;
+	}
+	
+	private static Unit generateUnit(final Integer gridSize,
+			final Integer unitIndex,
 			final UnitType unitType) {
-		final CellNumberFunction numberFunction = CELL_NUMBER_FUNCTIONS.get(unitType);
-		
-		final List<Unit> unitList = new ArrayList<>();
-		
-		for(int unit = 1; unit <= gridSize; unit++) {
-			final List<Cell> cellsInUnit = new ArrayList<>();
-			for(int itemNumber = 1; itemNumber <= gridSize; itemNumber++) {
-				final Integer nextCellNumber = numberFunction.cellNumberToExtract(gridSize, unit, itemNumber);
-				final Integer nextCellIndex = nextCellNumber - 1;
-				cellsInUnit.add(cells.get(nextCellIndex));
-			}
-			unitList.add(new Unit(unitType, cellsInUnit));
-		}
-		
-		return unitList;
+		return Unit.of(unitType, unitIndex, getCellPositionsForUnit(gridSize, unitIndex, unitType));
+	}
+	
+	private static Set<Position> getCellPositionsForUnit(final Integer gridSize, 
+			final Integer unitIndex,
+			final UnitType unitType) {
+		return IntStream.range(0, gridSize)
+				.mapToObj(itemIndex -> POSITION_FUNCTIONS.get(unitType)
+						.getCellPositionForUnitAndItem(gridSize, unitIndex, itemIndex))
+				.collect(Collectors.toSet());
 	}
 }

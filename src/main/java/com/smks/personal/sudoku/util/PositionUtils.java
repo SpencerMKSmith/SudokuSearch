@@ -26,10 +26,9 @@ public class PositionUtils {
 
 	 */
 	public static Position getPositionForIndex(final Integer gridSize, final Integer index) {
-		final Integer orderInBoard = index + 1;
 		
-		final Integer row = orderInBoard / gridSize;
-		final Integer column = orderInBoard % gridSize;
-		return new Position(column, row);
+		final Integer row = index / gridSize;
+		final Integer column = index % gridSize;
+		return Position.of(column, row);
 	}
 }
