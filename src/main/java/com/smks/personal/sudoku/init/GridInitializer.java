@@ -36,7 +36,7 @@ public class GridInitializer {
 			
 		}
 		
-		Output.printCellList(cellList);
+		//Output.printCellList(cellList);
 		
 		// Create Units from the Cell list
 		Set<Unit> blocks = UnitInitializer.initializeUnit(gridSize, cellList, UnitType.BLOCK);

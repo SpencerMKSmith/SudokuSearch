@@ -1,6 +1,5 @@
 package com.smks.personal.sudoku.validate;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -20,14 +19,20 @@ public class GridValidator {
 			return false;
 		}
 		
-		//areUnitsValid(grid, grid.getColumns());
-		return true;
+		return areUnitsValid(grid, grid.getColumns())
+				&& areUnitsValid(grid, grid.getRows())
+				&& areUnitsValid(grid, grid.getBlocks());
+
 	}
 	
 	/*
 	 * Checks that each Cell has an assigned value
 	 */
 	private boolean gridIsComplete(final Grid grid) {
+		boolean hasCorrectCount = grid.getPositionToCellMap().size() == Math.pow(grid.getGridSize(), 2);
+		
+		if(!hasCorrectCount) return false;
+		
 		return grid.getPositionToCellMap()
 				.values()
 				.stream()
@@ -35,11 +40,10 @@ public class GridValidator {
 				.allMatch(Optional::isPresent);
 	}
 	
-	private boolean areUnitsValid(final Grid grid, final List<Unit> units) {
-		final CellGatherer cellsForUnit = new CellGatherer();
+	private boolean areUnitsValid(final Grid grid, final Set<Unit> units) {
 		
 		return units.stream()
-				.map(unit -> cellsForUnit.getCellsForUnit(grid, unit))
+				.map(unit -> CellGatherer.getCellsForUnit(grid, unit))
 				.allMatch(cells -> isUnitValid(cells, grid.getGridSize()));
 				
 	}

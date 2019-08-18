@@ -33,15 +33,9 @@ public class Cell {
 		}
 	}
 	
-//	public Set<Cell> getPeers() {
-//		return parentUnits.stream()
-//				.map(Unit::getItemsInUnit)
-//				.flatMap(List::stream)
-//				.filter(cell -> !cell.equals(this))
-//				.collect(Collectors.toSet());
-//	}
-//	
-//	public void reducePossibilities(final Set<Integer> eliminatedPossibilities) {
-//		possibleValues = Sets.difference(possibleValues, eliminatedPossibilities);
-//	}
+	public Cell(final Position position, Integer value) {
+		this.position = position;
+		this.value = Optional.of(value);
+		this.possibleValues = Collections.emptySet();
+	}
 }

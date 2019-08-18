@@ -7,11 +7,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.collect.Sets;
 import com.smks.personal.sudoku.data.Cell;
 import com.smks.personal.sudoku.data.CellUpdate;
 import com.smks.personal.sudoku.data.Grid;
+import com.smks.personal.sudoku.data.Position;
 import com.smks.personal.sudoku.data.UpdatedGrid;
 import com.smks.personal.sudoku.util.CellGatherer;
 
@@ -22,21 +24,23 @@ import com.smks.personal.sudoku.util.CellGatherer;
  */
 public class DirectPeerEliminator implements Eliminator {
 
+	@Autowired
+	private CellGatherer cellGatherer;
 	
 	@Override
 	public UpdatedGrid eliminatePossibleValues(Grid grid) {
 		
-		final List<CellUpdate> cellUpdates = grid.getPositionToCellMap()
+		final Set<CellUpdate> cellUpdates = grid.getPositionToCellMap()
 				.values()
 				.stream()
 				.filter(cell -> cell.getValue().isEmpty())
 				.map(cell -> reducePossibilities(grid, cell))
 				.filter(Optional::isPresent)
 				.map(Optional::get)
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 		
 		cellUpdates.stream().forEach(cellUpdate -> grid.putUpdatedCell(cellUpdate.getUpdatedCell()));
-		return new UpdatedGrid(grid, cellUpdates);
+		return UpdatedGrid.of(grid, cellUpdates);
 	}
 	
 	public Optional<CellUpdate> reducePossibilities(final Grid grid, final Cell cell) {

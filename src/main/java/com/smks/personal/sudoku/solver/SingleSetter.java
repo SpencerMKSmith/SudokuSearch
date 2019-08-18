@@ -6,7 +6,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.smks.personal.sudoku.data.Cell;
+import com.smks.personal.sudoku.data.CellUpdate;
 import com.smks.personal.sudoku.data.Grid;
+import com.smks.personal.sudoku.data.UpdatedGrid;
 
 /*
  * A Single is the only candidate value for a given cell.  This will find cells
@@ -14,7 +16,7 @@ import com.smks.personal.sudoku.data.Grid;
  */
 public class SingleSetter {
 
-	public Grid solveSingles(final Grid grid) {
+	public UpdatedGrid solveSingles(final Grid grid) {
 	
 		final Set<Cell> loneSingles = grid.getPositionToCellMap()
 				.values()
@@ -26,7 +28,11 @@ public class SingleSetter {
 
 		loneSingles.stream().forEach(loneSingle -> grid.putUpdatedCell(loneSingle));
 		
-		return grid;
+		final Set<CellUpdate> cellUpdates = loneSingles.stream()
+				.map(cell -> CellUpdate.of(cell, Collections.emptySet(), this.getClass().getName()))
+				.collect(Collectors.toSet())
+				;
+		return UpdatedGrid.of(grid, cellUpdates);
 	}
 
 	private Cell getNewCellWithSetValue(final Cell cell) {
