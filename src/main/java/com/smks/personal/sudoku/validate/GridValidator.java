@@ -3,6 +3,10 @@ package com.smks.personal.sudoku.validate;
 import java.util.Optional;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
+
 import com.smks.personal.sudoku.data.Cell;
 import com.smks.personal.sudoku.data.Grid;
 import com.smks.personal.sudoku.data.Unit;
@@ -11,8 +15,13 @@ import com.smks.personal.sudoku.util.CellGatherer;
 /*
  * Takes a Grid and validates that the board is complete and valid
  */
+@Component
+@ComponentScan("com.smks.personal.sudoku")
 public class GridValidator {
 
+	@Autowired
+	private CellGatherer cellGatherer;
+	
 	public boolean isGridValid(final Grid grid) {
 		
 		if(!gridIsComplete(grid)) {
@@ -39,13 +48,12 @@ public class GridValidator {
 				.map(Cell::getValue)
 				.allMatch(Optional::isPresent);
 	}
-	
+
 	private boolean areUnitsValid(final Grid grid, final Set<Unit> units) {
 		
 		return units.stream()
-				.map(unit -> CellGatherer.getCellsForUnit(grid, unit))
-				.allMatch(cells -> isUnitValid(cells, grid.getGridSize()));
-				
+				.map(unit -> cellGatherer.getCellsForUnit(grid, unit))
+				.allMatch(cells -> isUnitValid(cells, grid.getGridSize()));		
 	}
 	
 	/*

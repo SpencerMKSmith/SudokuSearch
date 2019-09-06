@@ -6,10 +6,14 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import lombok.Builder;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
 
 @Value
-public class Grid {
+@Builder(toBuilder = true)
+@RequiredArgsConstructor
+public class Grid implements Cloneable {
 
 	Integer gridSize;
 	List<Cell> cells;
@@ -17,10 +21,6 @@ public class Grid {
 	Set<Unit> columns;
 	Set<Unit> rows;
 	Map<Position, Cell> positionToCellMap;
-	
-	public void putUpdatedCell(final Cell updatedCell) {
-		positionToCellMap.put(updatedCell.getPosition(), updatedCell);
-	}
 	
 	public Set<Unit> getAllUnits() {
 		return Stream.of(blocks, columns, rows)

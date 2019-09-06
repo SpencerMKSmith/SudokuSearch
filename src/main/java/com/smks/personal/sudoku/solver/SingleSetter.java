@@ -1,14 +1,20 @@
 package com.smks.personal.sudoku.solver;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.smks.personal.sudoku.data.Cell;
 import com.smks.personal.sudoku.data.CellUpdate;
 import com.smks.personal.sudoku.data.Grid;
 import com.smks.personal.sudoku.data.UpdatedGrid;
+import com.smks.personal.sudoku.util.GridStateManager;
 
 /*
  * A Single is the only candidate value for a given cell.  This will find cells
@@ -16,23 +22,22 @@ import com.smks.personal.sudoku.data.UpdatedGrid;
  */
 public class SingleSetter {
 
-	public UpdatedGrid solveSingles(final Grid grid) {
+	@Autowired
+	private GridStateManager gridStateManager;
 	
-		final Set<Cell> loneSingles = grid.getPositionToCellMap()
+	public UpdatedGrid solveSingles(final UpdatedGrid previous) {
+		final Grid grid = previous.getGrid();
+		
+		final List<CellUpdate> cellUpdates = grid.getPositionToCellMap()
 				.values()
 				.stream()
 				.filter(cell -> cell.getValue().isEmpty())
 				.filter(cell -> cell.getPossibleValues().size() == 1)
 				.map(this::getNewCellWithSetValue)
-				.collect(Collectors.toSet());
-
-		loneSingles.stream().forEach(loneSingle -> grid.putUpdatedCell(loneSingle));
-		
-		final Set<CellUpdate> cellUpdates = loneSingles.stream()
 				.map(cell -> CellUpdate.of(cell, Collections.emptySet(), this.getClass().getName()))
-				.collect(Collectors.toSet())
-				;
-		return UpdatedGrid.of(grid, cellUpdates);
+				.collect(toList());
+
+		return gridStateManager.step(previous, cellUpdates);
 	}
 
 	private Cell getNewCellWithSetValue(final Cell cell) {

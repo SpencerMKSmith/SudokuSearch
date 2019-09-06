@@ -13,36 +13,48 @@ import com.google.common.collect.Sets;
 import com.smks.personal.sudoku.data.Cell;
 import com.smks.personal.sudoku.data.CellUpdate;
 import com.smks.personal.sudoku.data.Grid;
-import com.smks.personal.sudoku.data.Position;
 import com.smks.personal.sudoku.data.UpdatedGrid;
+import com.smks.personal.sudoku.error.ErrorResult;
 import com.smks.personal.sudoku.util.CellGatherer;
+import com.smks.personal.sudoku.util.GridStateManager;
+
+import io.vavr.control.Either;
 
 /*
  * The most commonly used elimination method where the value of each peer
  * is looked at to eliminate possible values in the given cell.
  * 
  */
+
 public class DirectPeerEliminator implements Eliminator {
 
 	@Autowired
 	private CellGatherer cellGatherer;
+	@Autowired
+	private GridStateManager gridStateManager;
 	
 	@Override
-	public UpdatedGrid eliminatePossibleValues(Grid grid) {
+	public Either<ErrorResult, UpdatedGrid> apply(Either<ErrorResult, UpdatedGrid> previousUpdate) {
+		return previousUpdate.flatMap(this::performElimination);
+	}
+
+	public Either<ErrorResult, UpdatedGrid> performElimination(UpdatedGrid previousGrid) {
+		final Grid grid = previousGrid.getGrid();
 		
-		final Set<CellUpdate> cellUpdates = grid.getPositionToCellMap()
+		final List<CellUpdate> cellUpdates = grid.getPositionToCellMap()
 				.values()
 				.stream()
 				.filter(cell -> cell.getValue().isEmpty())
 				.map(cell -> reducePossibilities(grid, cell))
 				.filter(Optional::isPresent)
 				.map(Optional::get)
-				.collect(Collectors.toSet());
+				.collect(Collectors.toList());
 		
-		cellUpdates.stream().forEach(cellUpdate -> grid.putUpdatedCell(cellUpdate.getUpdatedCell()));
-		return UpdatedGrid.of(grid, cellUpdates);
+		final UpdatedGrid newlyUpdatedGrid = gridStateManager.step(previousGrid, cellUpdates);
+		
+		return Either.right(newlyUpdatedGrid);
 	}
-	
+
 	public Optional<CellUpdate> reducePossibilities(final Grid grid, final Cell cell) {
 		final Set<Integer> eliminatedPossibilities = getEliminatedPossibilities(grid, cell);
 		
@@ -59,12 +71,12 @@ public class DirectPeerEliminator implements Eliminator {
 	 * Returns a set of integers which represents values no longer
 	 * possible for the given cell.
 	 */
-	public Set<Integer> getEliminatedPossibilities(final Grid grid, final Cell cell) {
+	private Set<Integer> getEliminatedPossibilities(final Grid grid, final Cell cell) {
 		if(cell.getValue().isPresent()) {
 			return Collections.emptySet();
 		}
 				
-		final Set<Integer> valuesOfPeers = CellGatherer.getPeerCellsOfPosition(grid, cell.getPosition())
+		final Set<Integer> valuesOfPeers = cellGatherer.getPeerCellsOfPosition(grid, cell.getPosition())
 				.stream()
 				.map(Cell::getValue)
 				.filter(Optional::isPresent)
@@ -73,6 +85,4 @@ public class DirectPeerEliminator implements Eliminator {
 			
 		return Sets.intersection(cell.getPossibleValues(), valuesOfPeers);
 	}
-
-
 }

@@ -1,32 +1,40 @@
 package com.smks.personal.sudoku.init;
 
-import java.util.Collections;
-import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 
 import com.smks.personal.sudoku.data.Grid;
-import com.smks.personal.sudoku.eliminators.DirectPeerEliminator;
-import com.smks.personal.sudoku.eliminators.HiddenSingleEliminator;
+import com.smks.personal.sudoku.eliminators.Eliminator;
 import com.smks.personal.sudoku.puzzles.Puzzles;
 import com.smks.personal.sudoku.solver.Solver;
+import com.smks.personal.sudoku.util.Output;
 
+@Component
+@ComponentScan("com.smks.personal.sudoku")
 public class Driver {
 
+	@Autowired
+	private Eliminator directPeerEliminator;
+	@Autowired
+	private Eliminator hiddenSingleEliminator;
+	
 	public static void main(String[] args) {
-		
-		long startMillis = System.currentTimeMillis();
+        var ctx = new AnnotationConfigApplicationContext(Driver.class);
+        var driver = ctx.getBean(Driver.class);
+        driver.run();
+	}
+	
+	public void run() {
 
-		//for(int i = 0; i < 100; i++) {
+		final Grid grid = GridInitializer.initializeGrid(Puzzles.Medium_Puzzle_1());
+		
+		Output.printGrid(grid);
 
-			final Grid grid = GridInitializer.initializeGrid(Puzzles.Medium_Puzzle_1());
-			
-			final Solver solver = new Solver();
-			final DirectPeerEliminator eliminator = new DirectPeerEliminator();
-			final HiddenSingleEliminator hiddenSingleEliminator = new HiddenSingleEliminator();
+		final Solver solver = new Solver();
 		
-			solver.solvePuzzle(grid, List.of(eliminator, hiddenSingleEliminator));
-		
-		//}
-		//long millisPerSolve = (System.currentTimeMillis() - startMillis) / 100;
-		System.out.println("Total millis: " + (System.currentTimeMillis() - startMillis));
+		final Eliminator eliminatorFunction = directPeerEliminator.andThen(hiddenSingleEliminator);
+		solver.solvePuzzle(grid, eliminatorFunction);
 	}
 }

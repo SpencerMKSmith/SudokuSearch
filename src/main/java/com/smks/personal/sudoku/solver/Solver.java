@@ -3,40 +3,44 @@ package com.smks.personal.sudoku.solver;
 import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Function;
+
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.smks.personal.sudoku.data.CellUpdate;
 import com.smks.personal.sudoku.data.Grid;
 import com.smks.personal.sudoku.data.UpdatedGrid;
 import com.smks.personal.sudoku.eliminators.Eliminator;
+import com.smks.personal.sudoku.error.ErrorResult;
 import com.smks.personal.sudoku.util.Output;
 import com.smks.personal.sudoku.validate.GridValidator;
+
+import io.vavr.control.Either;
 public class Solver {
 
-	public Grid solvePuzzle(final Grid grid, final List<Eliminator> eliminators) {
-		final SingleSetter setter = new SingleSetter();
-		final GridValidator validator = new GridValidator();
-		
-		//System.out.println("Solving the puzzle with this eliminator: " + eliminators.get(0).getClass().getName());
-		
+	@Autowired
+	private GridValidator validator;
+	@Autowired
+	private SingleSetter setter;
+	
+	public Grid solvePuzzle(final Grid grid, final Eliminator eliminator) {
+				
 		final List<CellUpdate> allCellUpdates = new ArrayList<>();
-		Set<CellUpdate> newUpdates;
+		List<CellUpdate> newUpdates;
+		final Either<ErrorResult, UpdatedGrid> starter = Either.right(UpdatedGrid.of(grid, Collections.emptyList()));
 		
 		do {
 			
-			newUpdates = eliminators.stream()
-					.map(eliminator -> eliminator.eliminatePossibleValues(grid))
-					.map(UpdatedGrid::getCellUpdates)
-					.flatMap(Set::stream)
-					.collect(Collectors.toSet());
+			Either<ErrorResult, UpdatedGrid> eitherResult = eliminator.apply(starter);
+			newUpdates = eitherResult.get().getCellUpdates();
 			
 			allCellUpdates.addAll(newUpdates);
 			
 			System.out.println("Number of updates: " + newUpdates.size() + ", New updates: " + newUpdates);
-			final UpdatedGrid updatedGrid = setter.solveSingles(grid);
-			
+			final UpdatedGrid updatedGrid = setter.solveSingles(eitherResult.get());
+
 			System.out.println("Number of values set: " + updatedGrid.getCellUpdates().size() + ", New values: " + updatedGrid.getCellUpdates());
 
 			

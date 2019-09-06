@@ -2,41 +2,64 @@ package com.smks.personal.sudoku.eliminators;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.google.common.collect.Iterables;
 import com.smks.personal.sudoku.data.Cell;
 import com.smks.personal.sudoku.data.CellUpdate;
 import com.smks.personal.sudoku.data.Grid;
 import com.smks.personal.sudoku.data.UpdatedGrid;
+import com.smks.personal.sudoku.error.ErrorResult;
 import com.smks.personal.sudoku.util.CellGatherer;
+import com.smks.personal.sudoku.util.GridStateManager;
 
+import io.vavr.control.Either;
 import javafx.util.Pair;
 
+/*
+ * A Hidden Single is determined at the unit level.  It is when there is only a single
+ * Cell which has a given candidate value.
+ * 
+ * Example: Cell A7 has 4 candidate values, but it is the only one within the A column
+ * 			that could be a 4, so A7 is a 4.
+ */
 public class HiddenSingleEliminator implements Eliminator {
 
+	@Autowired
+	private CellGatherer cellGatherer;
+	@Autowired
+	private GridStateManager gridStateManager;
+	
 	@Override
-	public UpdatedGrid eliminatePossibleValues(Grid grid) {
-		
-		final Set<CellUpdate> cellUpdates = grid.getAllUnits()
-				.stream()
-				.map(unit -> CellGatherer.getCellsForUnit(grid, unit))
-				.map(this::performEliminationOnUnit)
-				.flatMap(Set::stream)
-				.collect(toSet());
-		
-		cellUpdates.stream().forEach(cellUpdate -> grid.putUpdatedCell(cellUpdate.getUpdatedCell()));
-		
-		return UpdatedGrid.of(grid, cellUpdates);
+	public Either<ErrorResult, UpdatedGrid> apply(Either<ErrorResult, UpdatedGrid> previousUpdate) {
+		return previousUpdate.flatMap(this::performElimination);
 	}
 	
-	private Set<CellUpdate> performEliminationOnUnit(final Set<Cell> cells) {
+	public Either<ErrorResult, UpdatedGrid> performElimination(UpdatedGrid previousGrid) {
+		final Grid grid = previousGrid.getGrid();
+		
+		final List<CellUpdate> cellUpdates = grid.getAllUnits()
+				.stream()
+				.map(unit -> cellGatherer.getCellsForUnit(grid, unit))
+				.map(this::performEliminationOnUnit)
+				.flatMap(List::stream)
+				.collect(toList());
+		
+		final UpdatedGrid newlyUpdatedGrid = gridStateManager.step(previousGrid, cellUpdates);
+		
+		return Either.right(newlyUpdatedGrid);
+	}
+	
+	private List<CellUpdate> performEliminationOnUnit(final Set<Cell> cells) {
 
 		return getPossibleCellsForEachCandidateValue(cells)
 				.entrySet()
@@ -44,7 +67,7 @@ public class HiddenSingleEliminator implements Eliminator {
 				.filter(e -> CollectionUtils.isNotEmpty(e.getValue()))
 				.filter(e -> e.getValue().size() == 1)
 				.map(this::getCellUpdateOfSingle)
-				.collect(toSet());
+				.collect(toList());
 	}
 	
 	private Map<Integer, Set<Cell>> getPossibleCellsForEachCandidateValue(final Set<Cell> cells) {
@@ -77,5 +100,4 @@ public class HiddenSingleEliminator implements Eliminator {
 				.map(value -> new Pair<>(cell, value))
 				.collect(Collectors.toSet());
 	}
-
 }

@@ -15,7 +15,7 @@ public class CellGatherer {
 	/*
 	 * Return the cells that correspond to a given Unit
 	 */
-	public static Set<Cell> getCellsForUnit(final Grid grid, final Unit unit) {
+	public Set<Cell> getCellsForUnit(final Grid grid, final Unit unit) {
 		
 		return unit.getCellPositions()
 				.stream()
@@ -23,7 +23,7 @@ public class CellGatherer {
 				.collect(toSet());
 	}
 	
-	public static Set<Cell> getPeerCellsOfPosition(final Grid grid, final Position position) {
+	public Set<Cell> getPeerCellsOfPosition(final Grid grid, final Position position) {
 		final Set<Unit> unitsThePositionBelongsTo = UnitUtils.getUnitsForPosition(position, grid);
 
 		return unitsThePositionBelongsTo.stream()

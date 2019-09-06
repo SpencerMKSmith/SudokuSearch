@@ -1,9 +1,17 @@
 package com.smks.personal.sudoku.eliminators;
 
+import java.util.function.Function;
+
 import com.smks.personal.sudoku.data.Grid;
 import com.smks.personal.sudoku.data.UpdatedGrid;
+import com.smks.personal.sudoku.error.ErrorResult;
 
-public interface Eliminator {
+import io.vavr.control.Either;
 
-	UpdatedGrid eliminatePossibleValues(final Grid grid);
+public interface Eliminator extends 
+			Function<Either<ErrorResult, UpdatedGrid>, Either<ErrorResult, UpdatedGrid>>{
+	
+	default Eliminator andThen(final Eliminator other) {
+		return updatedGrid -> other.apply(this.apply(updatedGrid));
+	}
 }
