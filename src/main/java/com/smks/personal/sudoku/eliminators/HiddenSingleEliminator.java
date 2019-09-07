@@ -52,6 +52,7 @@ public class HiddenSingleEliminator implements Eliminator {
 				.map(unit -> cellGatherer.getCellsForUnit(grid, unit))
 				.map(this::performEliminationOnUnit)
 				.flatMap(List::stream)
+				.distinct()
 				.collect(toList());
 		
 		final UpdatedGrid newlyUpdatedGrid = gridStateManager.step(previousGrid, cellUpdates);

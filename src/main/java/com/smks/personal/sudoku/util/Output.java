@@ -28,6 +28,7 @@ public class Output {
 			});
 			System.out.println("\n");
 		});
+		System.out.println("\n");
 
 	}
 	public static void printCellList(final List<Cell> cells) {

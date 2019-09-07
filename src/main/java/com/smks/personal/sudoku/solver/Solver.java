@@ -1,23 +1,18 @@
 package com.smks.personal.sudoku.solver;
 
-import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
-
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-import java.util.function.Function;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.smks.personal.sudoku.data.CellUpdate;
 import com.smks.personal.sudoku.data.Grid;
 import com.smks.personal.sudoku.data.UpdatedGrid;
 import com.smks.personal.sudoku.eliminators.Eliminator;
 import com.smks.personal.sudoku.error.ErrorResult;
-import com.smks.personal.sudoku.util.Output;
 import com.smks.personal.sudoku.validate.GridValidator;
 
 import io.vavr.control.Either;
+
 public class Solver {
 
 	@Autowired
@@ -25,31 +20,21 @@ public class Solver {
 	@Autowired
 	private SingleSetter setter;
 	
-	public Grid solvePuzzle(final Grid grid, final Eliminator eliminator) {
-				
-		final List<CellUpdate> allCellUpdates = new ArrayList<>();
-		List<CellUpdate> newUpdates;
-		final Either<ErrorResult, UpdatedGrid> starter = Either.right(UpdatedGrid.of(grid, Collections.emptyList()));
+	public Either<ErrorResult, UpdatedGrid> solvePuzzle(final UpdatedGrid previous, final Eliminator eliminator) {
 		
-		do {
+		final Either<ErrorResult, UpdatedGrid> updateResult = eliminator.apply(Either.right(previous)) // Eliminate candidates
+			.flatMap(setter::solveSingles);				// Set values
 			
-			Either<ErrorResult, UpdatedGrid> eitherResult = eliminator.apply(starter);
-			newUpdates = eitherResult.get().getCellUpdates();
+		// In the case of an error, return.  If both objects are equal than also return
+		if(updateResult.isLeft() || Objects.equals(updateResult.get(), previous)) 
+			return updateResult;
 			
-			allCellUpdates.addAll(newUpdates);
-			
-			System.out.println("Number of updates: " + newUpdates.size() + ", New updates: " + newUpdates);
-			final UpdatedGrid updatedGrid = setter.solveSingles(eitherResult.get());
-
-			System.out.println("Number of values set: " + updatedGrid.getCellUpdates().size() + ", New values: " + updatedGrid.getCellUpdates());
-
-			
-		} while(isNotEmpty(newUpdates));
-		
-		Output.printGrid(grid);
-		
-		System.out.println("Is Grid complete and valid? " + validator.isGridValid(grid));
-		
-		return grid;
+		// Else recurse the solver
+		return solvePuzzle(updateResult.get(), eliminator);		
+	}
+	
+	// Used the first time the solver is called
+	public Either<ErrorResult, UpdatedGrid> solvePuzzle(final Grid newGrid, final Eliminator eliminator) {
+		return solvePuzzle(UpdatedGrid.of(newGrid, Collections.emptyList()), eliminator);
 	}
 }

@@ -19,6 +19,8 @@ public class Driver {
 	private Eliminator directPeerEliminator;
 	@Autowired
 	private Eliminator hiddenSingleEliminator;
+	@Autowired
+	private Solver solver;
 	
 	public static void main(String[] args) {
         var ctx = new AnnotationConfigApplicationContext(Driver.class);
@@ -31,10 +33,8 @@ public class Driver {
 		final Grid grid = GridInitializer.initializeGrid(Puzzles.Medium_Puzzle_1());
 		
 		Output.printGrid(grid);
-
-		final Solver solver = new Solver();
 		
 		final Eliminator eliminatorFunction = directPeerEliminator.andThen(hiddenSingleEliminator);
-		solver.solvePuzzle(grid, eliminatorFunction);
+		Output.printGrid(solver.solvePuzzle(grid, eliminatorFunction).get().getGrid());
 	}
 }

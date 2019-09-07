@@ -2,13 +2,13 @@ package com.smks.personal.sudoku.config;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 
 import com.smks.personal.sudoku.eliminators.DirectPeerEliminator;
 import com.smks.personal.sudoku.eliminators.Eliminator;
 import com.smks.personal.sudoku.eliminators.HiddenSingleEliminator;
 import com.smks.personal.sudoku.solver.SingleSetter;
+import com.smks.personal.sudoku.solver.Solver;
 import com.smks.personal.sudoku.util.CellGatherer;
 import com.smks.personal.sudoku.util.GridStateManager;
 import com.smks.personal.sudoku.validate.GridValidator;
@@ -46,6 +46,11 @@ public class SpringConfig {
 	@Bean
 	public GridStateManager gridStateManager() {
 		return new GridStateManager();
+	}
+	
+	@Bean
+	public Solver solver() {
+		return new Solver();
 	}
 
 }

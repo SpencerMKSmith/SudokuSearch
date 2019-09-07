@@ -4,8 +4,11 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
 import com.smks.personal.sudoku.data.Cell;
 import com.smks.personal.sudoku.data.CellUpdate;
@@ -30,12 +33,25 @@ public class GridStateManager {
 	}
 	
 	private Map<Position, Cell> updateCellMap(final Grid previousGrid, final List<CellUpdate> newUpdates) {
-		final ImmutableMap.Builder<Position, Cell> cellMapBuilder = ImmutableMap.<Position, Cell>builder()
-				.putAll(previousGrid.getPositionToCellMap());
+
 		
-		newUpdates.stream()
-			.map(CellUpdate::getUpdatedCell)
-			.forEach(cell -> cellMapBuilder.put(cell.getPosition(), cell));
+		final ImmutableMap.Builder<Position, Cell> cellMapBuilder = ImmutableMap.<Position, Cell>builder();
+		
+		// Put in all new values first
+		final Map<Position, Cell> cellMapWithUpdatesOnly = newUpdates.stream()
+				.map(CellUpdate::getUpdatedCell)
+				.collect(Collectors.toMap(Cell::getPosition, Function.identity()));
+		
+		cellMapBuilder.putAll(cellMapWithUpdatesOnly);
+		
+		// Fill in the rest of the values, ensuring to not put duplicate keys
+		final Map<Position, Cell> unchangedValues = previousGrid.getPositionToCellMap()
+				.entrySet()
+				.stream()
+				.filter(e -> !cellMapWithUpdatesOnly.containsKey(e.getKey()))
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		
+		cellMapBuilder.putAll(unchangedValues);
 		
 		return cellMapBuilder.build();
 	}

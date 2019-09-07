@@ -14,7 +14,10 @@ import com.smks.personal.sudoku.data.Cell;
 import com.smks.personal.sudoku.data.CellUpdate;
 import com.smks.personal.sudoku.data.Grid;
 import com.smks.personal.sudoku.data.UpdatedGrid;
+import com.smks.personal.sudoku.error.ErrorResult;
 import com.smks.personal.sudoku.util.GridStateManager;
+
+import io.vavr.control.Either;
 
 /*
  * A Single is the only candidate value for a given cell.  This will find cells
@@ -25,7 +28,7 @@ public class SingleSetter {
 	@Autowired
 	private GridStateManager gridStateManager;
 	
-	public UpdatedGrid solveSingles(final UpdatedGrid previous) {
+	public Either<ErrorResult, UpdatedGrid> solveSingles(final UpdatedGrid previous) {
 		final Grid grid = previous.getGrid();
 		
 		final List<CellUpdate> cellUpdates = grid.getPositionToCellMap()
@@ -37,7 +40,7 @@ public class SingleSetter {
 				.map(cell -> CellUpdate.of(cell, Collections.emptySet(), this.getClass().getName()))
 				.collect(toList());
 
-		return gridStateManager.step(previous, cellUpdates);
+		return Either.right(gridStateManager.step(previous, cellUpdates));
 	}
 
 	private Cell getNewCellWithSetValue(final Cell cell) {
